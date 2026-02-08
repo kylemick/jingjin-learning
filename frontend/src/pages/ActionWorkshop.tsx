@@ -14,7 +14,7 @@ export default function ActionWorkshop() {
   const [practiceContent, setPracticeContent] = useState('');
   const [mode, setMode] = useState<'decompose' | 'practice'>('decompose');
   const { text, isStreaming, startStream } = useSSE();
-  const { isListening, startListening, stopListening, speak, stopSpeaking } = useVoice({
+  const { isListening, isTranscribing, isSpeaking, error, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onEnd: (t) => {
       if (mode === 'decompose') setTaskDesc((prev) => prev + t);
       else setPracticeContent((prev) => prev + t);
@@ -63,10 +63,12 @@ export default function ActionWorkshop() {
           />
           <VoiceButton
             isListening={isListening && mode === 'decompose'}
+            isTranscribing={isTranscribing}
             onToggleListen={() => {
               setMode('decompose');
               isListening ? stopListening() : startListening();
             }}
+            error={error}
           />
         </div>
         <button onClick={handleDecompose} className="px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600">
@@ -93,10 +95,12 @@ export default function ActionWorkshop() {
           </button>
           <VoiceButton
             isListening={isListening && mode === 'practice'}
+            isTranscribing={isTranscribing}
             onToggleListen={() => {
               setMode('practice');
               isListening ? stopListening() : startListening();
             }}
+            error={error}
           />
         </div>
       </div>
@@ -109,6 +113,7 @@ export default function ActionWorkshop() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
           className="mb-5"
         />
       )}

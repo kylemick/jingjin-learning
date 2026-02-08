@@ -15,7 +15,7 @@ export default function TimeCompass() {
   const [halfLife, setHalfLife] = useState('long');
   const [benefit, setBenefit] = useState('3');
   const { text, isStreaming, startStream } = useSSE();
-  const { isListening, startListening, stopListening, speak, stopSpeaking } = useVoice({
+  const { isListening, isTranscribing, isSpeaking, transcript, error, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onEnd: (t) => setActivity((prev) => prev + t),
   });
 
@@ -66,7 +66,10 @@ export default function TimeCompass() {
               />
               <VoiceButton
                 isListening={isListening}
+                isTranscribing={isTranscribing}
                 onToggleListen={isListening ? stopListening : startListening}
+                transcript={transcript}
+                error={error}
               />
             </div>
           </div>
@@ -115,6 +118,7 @@ export default function TimeCompass() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
           className="mb-5"
         />
       )}

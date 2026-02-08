@@ -13,7 +13,7 @@ alwaysApply: true
 - **後端**: Python 3.13 + FastAPI + SQLAlchemy(async) + MySQL + aiomysql
 - **前端**: React 18 + TypeScript + Vite + TailwindCSS (v4, @import 方式) + Recharts
 - **AI**: DeepSeek API (Chat Completion, SSE 流式)
-- **語音**: 訊飛 WebSocket STT + 瀏覽器 SpeechSynthesis TTS
+- **語音**: faster-whisper 本地 STT + 瀏覽器 SpeechSynthesis TTS
 
 ## 項目結構
 ```
@@ -24,25 +24,41 @@ improve/
 │   ├── schemas.py            # Pydantic 請求/響應模型
 │   ├── database/
 │   │   ├── connection.py     # async engine, session, init_db (不覆蓋)
-│   │   └── models.py         # 9 張 ORM 表
+│   │   └── models.py         # 11 張 ORM 表 (含 conversations, chat_messages)
 │   ├── services/
 │   │   ├── ai_service.py     # DeepSeek 封裝 (stream + non-stream)
+│   │   ├── agent_engine.py   # Agent 對話引擎 (階段流轉, 標記解析, 副作用)
 │   │   ├── learning_engine.py # 業務邏輯 (檔案上下文, 推薦)
+│   │   ├── stt_service.py    # faster-whisper 本地語音轉文字
 │   │   └── voice_service.py  # 訊飛 WebSocket 工具函數
-│   ├── routers/              # 10 個路由模組 (共 48 routes)
-│   └── prompts/templates.py  # 7 大模組 Prompt + 3 場景修飾
+│   ├── routers/              # 11 個路由模組
+│   │   └── agent.py          # 精進旅程 Agent 路由 (SSE 自管理 session)
+│   └── prompts/
+│       ├── templates.py      # 7 大模組 Prompt + 3 場景修飾
+│       └── agent_prompts.py  # Agent 7 階段 prompt + 總控 prompt + 標記格式
 ├── frontend/                 # React 前端 (port 5173)
 │   └── src/
-│       ├── components/       # Layout, StreamingText, VoiceButton, etc.
-│       ├── pages/            # 10 個頁面 (Home + 7模組 + Profile + QuestionBank)
-│       ├── hooks/            # useSSE, useVoice
-│       ├── services/api.ts   # 統一 API 封裝 + fetchSSE
+│       ├── components/       # Layout, PhaseProgress, ChatBubble, VoiceButton, etc.
+│       ├── pages/            # 11 個頁面 (含 AgentChat 精進旅程)
+│       ├── hooks/            # useSSE, useVoice, useAgentChat
+│       ├── services/api.ts   # 統一 API 封裝 + fetchSSE + agentApi
 │       └── lib/utils.ts      # cn() tailwind merge
 ├── start.sh                  # 一鍵啟動腳本
 └── scripts/                  # 工具腳本
 ```
 
 ## 核心設計模式
+
+### Agent 引導式對話 (核心入口: /journey)
+AI 扮演「精進教練」，通過多輪對話引導學生完成七步閉環：
+時間羅盤 → 選擇導航 → 行動工坊 → 學習道場 → 思維鍛造 → 才能精進 → 成長復盤
+
+- 階段通過 `phase_context` JSON 欄位跨模組傳遞數據（前序成果注入後序 prompt）
+- AI 回覆中 `<!--ACTION:...-->` 標記自動觸發數據保存到對應模組表
+- `<!--PHASE_COMPLETE:...-->` 標記觸發自動階段流轉
+- 流式輸出帶末尾緩衝，防止標記片段洩漏到前端
+- SSE 端點使用自管理 DB session（不依賴 Depends(get_db)）確保 StreamingResponse 安全
+- JSON 欄位修改必須用 `flag_modified()` 確保 SQLAlchemy dirty tracking
 
 ### 精進閉環
 個人檔案 → Prompt 動態調整 → 練習/行動 → AI 評估 → 更新檔案 → ...
@@ -60,7 +76,7 @@ improve/
 - academic (學科), expression (表達), interview (面試)
 
 ### AI 調用模式
-所有 AI 接口都走 SSE 流式: 後端 `StreamingResponse` → 前端 `useSSE` hook
+所有 AI 接口都走 SSE 流式: 後端 `StreamingResponse` → 前端 `useSSE` / `useAgentChat` hook
 Prompt 自動組裝: 模組 prompt + 場景修飾 + 個人檔案上下文
 
 ## 開發約定
@@ -70,3 +86,11 @@ Prompt 自動組裝: 模組 prompt + 場景修飾 + 個人檔案上下文
 - `.env` 管理所有密鑰, 禁止硬編碼
 - 使用繁體中文作為 UI 和 AI 回覆語言
 - 日誌統一輸出到 stdout, 帶 `[後端]`/`[前端]` 前綴
+
+## ⚠️ 質量紅線（必須遵守）
+- **任何功能改動必須端到端驗證通過後才算完成**，不能只寫代碼不驗證
+- 驗證內容包括：後端啟動無報錯、API 端點返回正確數據、前端 TypeScript 編譯通過、前端 build 成功
+- 涉及 AI 服務的改動，必須實際調用 DeepSeek API 驗證流式回覆正常
+- 涉及階段流轉的改動，必須驗證至少 2 次階段推進成功
+- 涉及數據保存的改動，必須查詢數據庫確認數據已正確寫入
+- 發現問題必須修復並重新驗證，不能留下已知 bug 就停止

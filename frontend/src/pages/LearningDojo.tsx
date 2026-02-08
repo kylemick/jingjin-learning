@@ -16,7 +16,7 @@ export default function LearningDojo() {
   const [knowledgeA, setKnowledgeA] = useState('');
   const [knowledgeB, setKnowledgeB] = useState('');
   const { text, isStreaming, startStream } = useSSE();
-  const { isListening, startListening, stopListening, speak, stopSpeaking } = useVoice({
+  const { isListening, isTranscribing, isSpeaking, error, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onEnd: (t) => {
       if (activeTab === 'question') setTopic((prev) => prev + t);
       else if (activeTab === 'decode') setContent((prev) => prev + t);
@@ -79,7 +79,7 @@ export default function LearningDojo() {
                 placeholder="你想學習什麼主題？（如：勾股定理、光的折射）"
                 className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm"
               />
-              <VoiceButton isListening={isListening} onToggleListen={isListening ? stopListening : startListening} />
+              <VoiceButton isListening={isListening} isTranscribing={isTranscribing} onToggleListen={isListening ? stopListening : startListening} error={error} />
             </div>
           </>
         )}
@@ -95,7 +95,7 @@ export default function LearningDojo() {
               rows={4}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-2"
             />
-            <VoiceButton isListening={isListening} onToggleListen={isListening ? stopListening : startListening} />
+            <VoiceButton isListening={isListening} isTranscribing={isTranscribing} onToggleListen={isListening ? stopListening : startListening} error={error} />
           </>
         )}
 
@@ -130,6 +130,7 @@ export default function LearningDojo() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
         />
       )}
     </div>

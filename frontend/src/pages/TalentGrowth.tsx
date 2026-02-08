@@ -17,7 +17,7 @@ export default function TalentGrowth() {
   const [currentTopic, setCurrentTopic] = useState('');
   const [ability, setAbility] = useState<any>(null);
   const { text, isStreaming, startStream } = useSSE();
-  const { speak, stopSpeaking } = useVoice();
+  const { isSpeaking, speak, stopSpeaking } = useVoice();
 
   useEffect(() => {
     if (studentId) {
@@ -107,6 +107,7 @@ export default function TalentGrowth() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
         />
       )}
     </div>

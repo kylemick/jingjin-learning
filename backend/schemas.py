@@ -230,3 +230,40 @@ class FeedbackSummaryOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ===================== Agent 對話 =====================
+
+class ConversationCreate(BaseModel):
+    title: Optional[str] = "新的精進旅程"
+    scenario: str = "academic"
+
+class ChatMessageOut(BaseModel):
+    id: int
+    role: str
+    content: str
+    phase_at_time: Optional[str] = None
+    action_metadata: Optional[dict] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class ConversationOut(BaseModel):
+    id: int
+    title: str
+    scenario: str
+    current_phase: str
+    phase_context: Optional[dict] = None
+    status: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class ConversationDetailOut(ConversationOut):
+    messages: List[ChatMessageOut] = []
+
+class AgentChatRequest(BaseModel):
+    message: str

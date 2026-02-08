@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
+import AgentChat from './pages/AgentChat';
 import TimeCompass from './pages/TimeCompass';
 import ChoiceNavigator from './pages/ChoiceNavigator';
 import ActionWorkshop from './pages/ActionWorkshop';
@@ -17,6 +18,7 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/journey" element={<AgentChat />} />
           <Route path="/time-compass" element={<TimeCompass />} />
           <Route path="/choice-navigator" element={<ChoiceNavigator />} />
           <Route path="/action-workshop" element={<ActionWorkshop />} />

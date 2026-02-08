@@ -23,7 +23,7 @@ export default function ThinkingForge() {
   const [problem, setProblem] = useState('');
   const [tool, setTool] = useState('argument');
   const { text, isStreaming, startStream } = useSSE();
-  const { isListening, startListening, stopListening, speak, stopSpeaking } = useVoice({
+  const { isListening, isTranscribing, isSpeaking, error, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onEnd: (t) => {
       if (activeTab === 'socratic') setAnswer((prev) => prev + t);
       else if (activeTab === 'simplify') setProblem((prev) => prev + t);
@@ -97,7 +97,7 @@ export default function ThinkingForge() {
                 rows={3}
                 className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm"
               />
-              <VoiceButton isListening={isListening} onToggleListen={isListening ? stopListening : startListening} />
+              <VoiceButton isListening={isListening} isTranscribing={isTranscribing} onToggleListen={isListening ? stopListening : startListening} error={error} />
             </div>
             <button onClick={handleSocratic} className="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
               開始對話
@@ -117,7 +117,7 @@ export default function ThinkingForge() {
                 rows={4}
                 className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm"
               />
-              <VoiceButton isListening={isListening} onToggleListen={isListening ? stopListening : startListening} />
+              <VoiceButton isListening={isListening} isTranscribing={isTranscribing} onToggleListen={isListening ? stopListening : startListening} error={error} />
             </div>
             <button onClick={handleSimplify} className="px-4 py-2 bg-pink-500 text-white text-sm rounded-lg hover:bg-pink-600">
               開始簡化
@@ -163,6 +163,7 @@ export default function ThinkingForge() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
         />
       )}
     </div>

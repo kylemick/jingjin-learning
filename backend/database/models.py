@@ -221,3 +221,46 @@ class LearningRecord(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     student = relationship("Student", back_populates="learning_records")
+
+
+# ===================== Agent 對話系統 =====================
+
+class ConversationStatus(str, enum.Enum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class Conversation(Base):
+    """Agent 對話會話 — 串聯七大模組的精進旅程"""
+    __tablename__ = "conversations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(Integer, ForeignKey("students.id"))
+    title = Column(String(500), default="新的精進旅程")
+    scenario = Column(Enum(ScenarioType), default=ScenarioType.ACADEMIC)
+    current_phase = Column(String(50), default="time_compass")
+    phase_context = Column(JSON, default=dict)     # 各階段收集到的關鍵信息
+    status = Column(Enum(ConversationStatus), default=ConversationStatus.ACTIVE)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    student = relationship("Student", backref="conversations")
+    messages = relationship("ChatMessage", back_populates="conversation",
+                            cascade="all, delete-orphan",
+                            order_by="ChatMessage.created_at")
+
+
+class ChatMessage(Base):
+    """對話消息"""
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"))
+    role = Column(String(20), nullable=False)      # user / assistant / system
+    content = Column(Text, nullable=False)
+    phase_at_time = Column(String(50))             # 發送時所處階段
+    action_metadata = Column(JSON, nullable=True)   # 觸發的操作記錄
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    conversation = relationship("Conversation", back_populates="messages")

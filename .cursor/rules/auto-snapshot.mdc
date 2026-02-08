@@ -4,11 +4,12 @@ alwaysApply: true
 ---
 
 # 項目自動快照
-> 最後更新: 2026-02-08 17:59:47
-> 文件總數: 51
+> 最後更新: 2026-02-08 19:05:14
+> 文件總數: 60
 
 ## 後端路由 (backend/routers/)
   - action_workshop.py (6 endpoints)
+  - agent.py (7 endpoints)
   - choice_navigator.py (4 endpoints)
   - learning_dojo.py (3 endpoints)
   - profile.py (8 endpoints)
@@ -17,10 +18,11 @@ alwaysApply: true
   - talent_growth.py (3 endpoints)
   - thinking_forge.py (3 endpoints)
   - time_compass.py (4 endpoints)
-  - voice.py (2 endpoints)
+  - voice.py (4 endpoints)
 
 ## 前端頁面 (frontend/src/pages/)
   - ActionWorkshop [hooks: useSSE,useState,useVoice,]
+  - AgentChat [hooks: useAgentChat,useEffect,useRef,useState,useVoice,]
   - ChoiceNavigator [hooks: useEffect,useSSE,useState,useVoice,]
   - Home [hooks: useEffect,useState,]
   - LearningDojo [hooks: useSSE,useState,useVoice,]
@@ -41,6 +43,8 @@ alwaysApply: true
   - Goal
   - ActionPlan
   - LearningRecord
+  - Conversation
+  - ChatMessage
 
 ## Pydantic Schemas
   - StudentCreate
@@ -62,6 +66,10 @@ alwaysApply: true
   - AIRequest
   - ReflectionCreate
   - FeedbackSummaryOut
+  - ConversationCreate
+  - ChatMessageOut
+  - ConversationOut
+  - AgentChatRequest
 
 ## API 端點清單
 ```
@@ -91,6 +99,8 @@ question_bankpost)
 question_bankpost)
 question_bankget)
 question_bankpost)
+voiceget)
+voicepost)
 voicewebsocket)
 voiceget)
 learning_dojopost)
@@ -101,6 +111,13 @@ review_hubpost)
 review_hubpost)
 review_hubpost)
 review_hubget)
+agentpost)
+agentget)
+agentget)
+agentpost)
+agentpost)
+agentpost)
+agentget)
 talent_growthpost)
 talent_growthpost)
 talent_growthget)
@@ -122,6 +139,7 @@ python-dotenv>=1.0.0
 httpx>=0.27.0
 websockets>=13.0
 python-multipart>=0.0.9
+faster-whisper>=1.0.0
 ```
 
 ## 前端依賴
@@ -154,6 +172,7 @@ python-multipart>=0.0.9
 ./.cursor/rules/ai-prompts.mdc
 ./.cursor/rules/auto-snapshot.mdc
 ./.cursor/rules/backend.mdc
+./.cursor/rules/book-principles.mdc
 ./.cursor/rules/database.mdc
 ./.cursor/rules/frontend.mdc
 ./.cursor/rules/project-overview.mdc
@@ -163,9 +182,11 @@ python-multipart>=0.0.9
 ./backend/database/models.py
 ./backend/main.py
 ./backend/prompts/__init__.py
+./backend/prompts/agent_prompts.py
 ./backend/prompts/templates.py
 ./backend/routers/__init__.py
 ./backend/routers/action_workshop.py
+./backend/routers/agent.py
 ./backend/routers/choice_navigator.py
 ./backend/routers/learning_dojo.py
 ./backend/routers/profile.py
@@ -177,20 +198,26 @@ python-multipart>=0.0.9
 ./backend/routers/voice.py
 ./backend/schemas.py
 ./backend/services/__init__.py
+./backend/services/agent_engine.py
 ./backend/services/ai_service.py
 ./backend/services/learning_engine.py
+./backend/services/stt_service.py
 ./backend/services/voice_service.py
 ./frontend/src/App.tsx
+./frontend/src/components/ChatBubble.tsx
 ./frontend/src/components/Layout.tsx
 ./frontend/src/components/PageHeader.tsx
+./frontend/src/components/PhaseProgress.tsx
 ./frontend/src/components/ScenarioSelector.tsx
 ./frontend/src/components/StreamingText.tsx
 ./frontend/src/components/VoiceButton.tsx
+./frontend/src/hooks/useAgentChat.ts
 ./frontend/src/hooks/useSSE.ts
 ./frontend/src/hooks/useVoice.ts
 ./frontend/src/lib/utils.ts
 ./frontend/src/main.tsx
 ./frontend/src/pages/ActionWorkshop.tsx
+./frontend/src/pages/AgentChat.tsx
 ./frontend/src/pages/ChoiceNavigator.tsx
 ./frontend/src/pages/Home.tsx
 ./frontend/src/pages/LearningDojo.tsx

@@ -70,6 +70,18 @@ export const actionWorkshopApi = {
     request<any[]>(`/action-workshop/${studentId}/recommend-questions?scenario=${scenario}`),
 };
 
+// ===================== 精進旅程 Agent =====================
+export const agentApi = {
+  listConversations: (studentId: number) =>
+    request<any[]>(`/agent/${studentId}/conversations`),
+  createConversation: (studentId: number, data: { title?: string; scenario?: string }) =>
+    request<any>(`/agent/${studentId}/conversations`, { method: 'POST', body: JSON.stringify(data) }),
+  getConversation: (studentId: number, convId: number) =>
+    request<any>(`/agent/${studentId}/conversations/${convId}`),
+  skipPhase: (studentId: number, convId: number) =>
+    request<any>(`/agent/${studentId}/conversations/${convId}/skip-phase`, { method: 'POST' }),
+};
+
 // ===================== 成長復盤 =====================
 export const reviewHubApi = {
   listRecords: (studentId: number, params?: Record<string, string>) => {

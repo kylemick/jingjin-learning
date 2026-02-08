@@ -12,20 +12,27 @@ globs: ["backend/**/*.py"]
 | `config.py` | `Settings(BaseSettings)`, 從 `.env` 讀取, `@lru_cache` |
 | `schemas.py` | 所有 Pydantic 模型 (Create/Update/Out) |
 | `database/connection.py` | async engine/session, `Base`, `get_db()`, `init_db()` |
-| `database/models.py` | 9 張 ORM 表, 枚舉類型 |
+| `database/models.py` | 11 張 ORM 表, 枚舉類型 |
 | `services/ai_service.py` | `chat_completion()`, `chat_completion_stream()`, `get_ai_response()` |
+| `services/agent_engine.py` | Agent 對話引擎: 標記解析、副作用執行、階段流轉、流式緩衝 |
 | `services/learning_engine.py` | `get_student_full()`, `student_to_context()`, `smart_recommend_questions()` |
+| `services/stt_service.py` | faster-whisper 本地語音轉文字 |
 | `services/voice_service.py` | 訊飛認證 URL 生成, 幀數據構建, 響應解析 |
 | `prompts/templates.py` | `SYSTEM_BASE`, `MODULE_PROMPTS[7]`, `SCENARIO_PROMPTS[3]`, `build_full_prompt()` |
+| `prompts/agent_prompts.py` | `PHASES[7]`, `AGENT_SYSTEM_PROMPT`, `build_agent_system_prompt()` |
 
-## 數據庫模型 (9 表)
+## 數據庫模型 (11 表)
 - `students` → `ability_profiles` (1:1), `interest_items` (1:N)
 - `students` → `feedback_summaries` (1:N), `time_entries` (1:N)
 - `students` → `goals` (1:N), `action_plans` (1:N), `learning_records` (1:N)
+- `students` → `conversations` (1:N) → `chat_messages` (1:N)
 - `questions` (獨立題庫表)
-- 枚舉: `ScenarioType`, `DifficultyLevel`, `SubjectType`, `ModuleType`
+- 枚舉: `ScenarioType`, `DifficultyLevel`, `SubjectType`, `ModuleType`, `ConversationStatus`
 
-## 路由模組 (10 個)
+**注意**: `ChatMessage` 的操作記錄欄位名為 `action_metadata`（因 `metadata` 是 SQLAlchemy 保留字）
+
+## 路由模組 (11 個)
+- `agent.py` - **精進旅程**: 對話 CRUD + SSE chat + 階段跳過 + 階段定義
 - `profile.py` - CRUD 學生/興趣/能力/反饋
 - `question_bank.py` - 題庫 CRUD + AI 生成
 - `time_compass.py` - 時間記錄 + AI 分析
@@ -35,7 +42,7 @@ globs: ["backend/**/*.py"]
 - `thinking_forge.py` - 蘇格拉底問答 + 簡化 + 結構化思考
 - `talent_growth.py` - 優勢分析 + 挑戰設計 + 成長軌跡
 - `review_hub.py` - 記錄查詢 + 反思 + 深度反饋 + 檔案更新 + 儀表盤
-- `voice.py` - WebSocket STT 代理 + TTS 配置
+- `voice.py` - 語音轉文字 + TTS 配置
 
 ## AI 流式輸出模式 (所有 AI 路由統一)
 ```python
@@ -47,9 +54,27 @@ async def event_generator():
 return StreamingResponse(event_generator(), media_type="text/event-stream")
 ```
 
+## Agent SSE 端點的特殊模式
+Agent 的 SSE 端點 **不使用 `Depends(get_db)`**，因為 StreamingResponse 的 body 在 FastAPI 依賴注入 scope 結束後才消費。必須在 event_generator 內自管理 session：
+```python
+async def event_generator():
+    async with async_session() as db:
+        try:
+            # ... 流式操作 ...
+            await db.commit()
+        except Exception:
+            await db.rollback()
+```
+
+## Agent 標記解析
+- AI 回覆末尾可能包含 `<!--ACTION:{"type":"...","data":{...}}-->` 和 `<!--PHASE_COMPLETE:{"summary":"..."}-->`
+- `agent_engine.py` 使用末尾緩衝策略防止標記片段洩漏到前端
+- JSON 欄位（如 `phase_context`）修改後必須 `flag_modified(obj, "field")` 確保 SQLAlchemy 追蹤
+
 ## 新增路由/功能的規範
 1. 在 `routers/` 下新增文件, 遵循現有命名風格
 2. 在 `main.py` 中 import 並 `include_router`
 3. 若需新表, 在 `database/models.py` 新增, 在 `schemas.py` 新增對應模型
 4. AI 相關接口必須接受 `student_id`, 從中構建個人檔案上下文
 5. 使用 `get_student_full()` + `student_to_context()` 構建 AI prompt
+6. **不要用 `metadata` 作為 ORM 欄位名**（SQLAlchemy 保留字）

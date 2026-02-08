@@ -65,8 +65,10 @@ from routers import (
     talent_growth,
     review_hub,
     voice,
+    agent,
 )
 
+app.include_router(agent.router, prefix="/api/agent", tags=["精進旅程"])
 app.include_router(profile.router, prefix="/api/profile", tags=["個人檔案"])
 app.include_router(question_bank.router, prefix="/api/questions", tags=["題庫"])
 app.include_router(time_compass.router, prefix="/api/time-compass", tags=["時間羅盤"])

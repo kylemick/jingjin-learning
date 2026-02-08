@@ -16,7 +16,7 @@ export default function ReviewHub() {
   const [reflectionText, setReflectionText] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<number | null>(null);
   const { text, isStreaming, startStream } = useSSE();
-  const { isListening, startListening, stopListening, speak, stopSpeaking } = useVoice({
+  const { isListening, isTranscribing, isSpeaking, error, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onEnd: (t) => setFeedbackContent((prev) => prev + t),
   });
 
@@ -81,7 +81,7 @@ export default function ReviewHub() {
           <button onClick={handleDeepFeedback} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
             獲取深度反饋
           </button>
-          <VoiceButton isListening={isListening} onToggleListen={isListening ? stopListening : startListening} />
+          <VoiceButton isListening={isListening} isTranscribing={isTranscribing} onToggleListen={isListening ? stopListening : startListening} error={error} />
           <button onClick={handleUpdateProfile} className="px-4 py-2 bg-emerald-500 text-white text-sm rounded-lg hover:bg-emerald-600">
             更新個人檔案
           </button>
@@ -95,6 +95,7 @@ export default function ReviewHub() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
           className="mb-5"
         />
       )}

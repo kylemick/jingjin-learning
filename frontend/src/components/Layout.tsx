@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import {
-  Clock, Compass, Zap, BookOpen, Brain, Target, BarChart3, Home, User, Database
+  Clock, Compass, Zap, BookOpen, Brain, Target, BarChart3, Home, User, Database, MessageCircle
 } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: '首頁', icon: Home },
+  { path: '/journey', label: '精進旅程', icon: MessageCircle, highlight: true },
   { path: '/time-compass', label: '時間羅盤', icon: Clock },
   { path: '/choice-navigator', label: '選擇導航', icon: Compass },
   { path: '/action-workshop', label: '行動工坊', icon: Zap },
@@ -32,6 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            const highlight = 'highlight' in item && item.highlight;
             return (
               <Link
                 key={item.path}
@@ -40,11 +42,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   'flex items-center gap-3 px-5 py-2.5 text-sm transition-colors',
                   isActive
                     ? 'bg-indigo-50 text-indigo-700 font-medium border-r-2 border-indigo-600'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    : highlight
+                      ? 'text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50 font-medium'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 )}
               >
                 <Icon size={18} />
                 {item.label}
+                {highlight && !isActive && (
+                  <span className="ml-auto text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full">AI</span>
+                )}
               </Link>
             );
           })}

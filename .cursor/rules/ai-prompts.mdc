@@ -1,11 +1,15 @@
 ---
 description: AI Prompt 設計規範 - 修改 prompts 或 AI 相關代碼時加載
-globs: ["backend/prompts/**", "backend/services/ai_service.py"]
+globs: ["backend/prompts/**", "backend/services/ai_service.py", "backend/services/agent_engine.py"]
 ---
 
 # AI Prompt 設計規範
 
+> **前提：所有 Prompt 設計必須嚴格遵循 `book-principles.mdc` 中定義的《精進》核心原則，不得違背。**
+
 ## Prompt 組裝流程
+
+### 獨立模組模式
 ```
 build_full_prompt(module, scenario, student_info)
   → MODULE_PROMPTS[module]["system"]     # 模組角色 + 核心理念
@@ -13,16 +17,32 @@ build_full_prompt(module, scenario, student_info)
   + build_student_context(student_info)   # 個人檔案動態注入
 ```
 
+### Agent 對話模式
+```
+build_agent_system_prompt(phase_key, scenario, student_context, phase_context)
+  → AGENT_SYSTEM_PROMPT                  # 總控 prompt（精進教練角色 + 標記格式）
+  + build_phase_prompt(phase_key)        # 當前階段引導目標 + 完成標準
+  + build_phase_context_prompt(ctx)      # 前序階段成果（跨模組數據傳遞）
+  + student_context                       # 個人檔案
+```
+
 ## 七大模組 Prompt 角色
-| 模組 | AI 角色 | 核心方法論 |
-|---|---|---|
-| time_compass | 時間管理教練 | 半衰期評估, 五年願景, 快慢切換 |
-| choice_navigator | 選擇引導師 | 終極問題, 隱含假設, 第三選擇, 不替學生做選擇 |
-| action_workshop | 行動教練 | 即刻行動, MVP, 圖層工作法, 三行而後思 |
-| learning_dojo | 學習導師 | 問題中心, 解碼知識, 技能終點, 知識融合 |
-| thinking_forge | 思維訓練師 | 斷捨離, 潛意識, 思維圖像化, 周密思考 |
-| talent_growth | 潛能教練 | 長板優勢, 必要難度, 興趣驅動而非意志力 |
-| review_hub | 復盤教練 | 三行而後思, 主動探索, 獨特性, 創造成功 |
+| 模組 | AI 角色 | 核心方法論 | 書中章節 |
+|---|---|---|---|
+| time_compass | 時間管理教練 | 半衰期評估, 五年願景, 快慢切換 | 時間之尺 |
+| choice_navigator | 選擇引導師 | 終極問題, 隱含假設, 第三選擇, 不替學生做選擇 | 尋找心中的巴拿馬 |
+| action_workshop | 行動教練 | 即刻行動, MVP, 圖層工作法, 三行而後思 | 即刻行動 |
+| learning_dojo | 學習導師 | 問題中心, 解碼知識, 技能終點, 知識融合 | 高段位學習者 |
+| thinking_forge | 思維訓練師 | 斷捨離, 潛意識, 思維圖像化, 周密思考 | 修煉思維利器 |
+| talent_growth | 潛能教練 | 長板優勢, 必要難度, 興趣驅動而非意志力 | 努力的才能 |
+| review_hub | 復盤教練 | 三行而後思, 主動探索, 獨特性, 創造成功 | 獨特的成功 |
+
+## Agent 標記格式
+AI 回覆中可嵌入的結構化標記（對用戶不可見，由 agent_engine 解析）：
+- `<!--ACTION:{"type":"save_time_entry","data":{...}}-->` — 觸發數據保存
+- `<!--PHASE_COMPLETE:{"summary":"..."}-->` — 觸發階段流轉
+
+支持的 ACTION type：`save_time_entry`, `save_goal`, `save_action_plan`, `save_learning_record`
 
 ## 個人檔案上下文注入
 `build_student_context()` 從 student_info dict 提取:
@@ -32,7 +52,9 @@ build_full_prompt(module, scenario, student_info)
 - 反饋摘要 (前3條, 含場景/優勢/短板/趨勢)
 
 ## 修改 Prompt 的注意事項
-1. 保持「引導而非直接給答案」的教學風格
-2. 確保每個模組的 Prompt 包含書中對應章節的核心概念
-3. 使用繁體中文回覆
-4. 個人檔案數據會隨學習過程動態變化, Prompt 需適配
+1. **必須對照 `book-principles.mdc`** — 確認改動不違背書中任何原則
+2. 保持「引導而非直接給答案」的教學風格
+3. 確保每個模組的 Prompt 包含書中對應章節的核心概念
+4. 使用繁體中文回覆
+5. 個人檔案數據會隨學習過程動態變化, Prompt 需適配
+6. Agent 模式下，前序階段成果必須注入到後序階段的 prompt 中，保持因果鏈

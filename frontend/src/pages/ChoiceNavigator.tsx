@@ -16,7 +16,7 @@ export default function ChoiceNavigator() {
   const [description, setDescription] = useState('');
   const [vision, setVision] = useState('');
   const { text, isStreaming, startStream } = useSSE();
-  const { isListening, startListening, stopListening, speak, stopSpeaking } = useVoice({
+  const { isListening, isTranscribing, isSpeaking, transcript, error, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onEnd: (t) => setTitle((prev) => prev + t),
   });
 
@@ -65,7 +65,10 @@ export default function ChoiceNavigator() {
             />
             <VoiceButton
               isListening={isListening}
+              isTranscribing={isTranscribing}
               onToggleListen={isListening ? stopListening : startListening}
+              transcript={transcript}
+              error={error}
             />
           </div>
           <textarea
@@ -96,6 +99,7 @@ export default function ChoiceNavigator() {
           onToggleListen={() => {}}
           onSpeak={() => speak(text)}
           onStopSpeak={stopSpeaking}
+          isSpeaking={isSpeaking}
           className="mb-5"
         />
       )}
