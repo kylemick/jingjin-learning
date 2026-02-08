@@ -94,3 +94,7 @@ Prompt 自動組裝: 模組 prompt + 場景修飾 + 個人檔案上下文
 - 涉及階段流轉的改動，必須驗證至少 2 次階段推進成功
 - 涉及數據保存的改動，必須查詢數據庫確認數據已正確寫入
 - 發現問題必須修復並重新驗證，不能留下已知 bug 就停止
+- **所有中文輸出（AI 回覆、語音識別、數據庫存儲）必須為繁體中文，
+  通過 backend/services/chinese_converter.py 的 to_traditional() 統一轉換**
+- 可用 `python scripts/check-traditional-chinese.py` 一鍵檢查全系統簡體字合規性
+- 前端 TTS lang 必須設為 `zh-TW`，優先選擇繁體中文語音

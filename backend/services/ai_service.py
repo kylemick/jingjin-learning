@@ -1,12 +1,14 @@
 """
 DeepSeek AI 服務封裝
 支持流式 (SSE) 和非流式調用
+所有輸出均經過繁體中文轉換
 """
 import json
 from typing import AsyncGenerator, Optional
 import httpx
 from config import get_settings
 from prompts.templates import build_full_prompt
+from services.chinese_converter import to_traditional
 
 settings = get_settings()
 
@@ -36,7 +38,8 @@ async def chat_completion(
         response = await client.post(DEEPSEEK_CHAT_URL, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
-        return data["choices"][0]["message"]["content"]
+        content = data["choices"][0]["message"]["content"]
+        return to_traditional(content)
 
 
 async def chat_completion_stream(
@@ -71,7 +74,7 @@ async def chat_completion_stream(
                         delta = data["choices"][0].get("delta", {})
                         content = delta.get("content", "")
                         if content:
-                            yield content
+                            yield to_traditional(content)
                     except (json.JSONDecodeError, KeyError, IndexError):
                         continue
 

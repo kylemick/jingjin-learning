@@ -115,7 +115,7 @@ export function useVoice(options?: UseVoiceOptions) {
     setIsListening(false);
   }, []);
 
-  const speak = useCallback((text: string, lang: string = 'zh-CN') => {
+  const speak = useCallback((text: string, lang: string = 'zh-TW') => {
     if (!('speechSynthesis' in window)) {
       console.warn('此瀏覽器不支持語音合成');
       return;
@@ -129,11 +129,19 @@ export function useVoice(options?: UseVoiceOptions) {
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // 嘗試選擇中文語音
+    // 優先選擇繁體中文語音 (zh-TW / zh-HK)，其次任何中文語音
+    const selectVoice = (voiceList: SpeechSynthesisVoice[]) => {
+      const twVoice = voiceList.find(v => v.lang === 'zh-TW');
+      if (twVoice) return twVoice;
+      const hkVoice = voiceList.find(v => v.lang === 'zh-HK');
+      if (hkVoice) return hkVoice;
+      return voiceList.find(v => v.lang.startsWith('zh')) || null;
+    };
+
     const voices = window.speechSynthesis.getVoices();
-    const zhVoice = voices.find(v => v.lang.startsWith('zh'));
-    if (zhVoice) {
-      utterance.voice = zhVoice;
+    const chosen = selectVoice(voices);
+    if (chosen) {
+      utterance.voice = chosen;
     }
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -144,7 +152,7 @@ export function useVoice(options?: UseVoiceOptions) {
     if (voices.length === 0) {
       window.speechSynthesis.onvoiceschanged = () => {
         const v = window.speechSynthesis.getVoices();
-        const zh = v.find(voice => voice.lang.startsWith('zh'));
+        const zh = selectVoice(v);
         if (zh) utterance.voice = zh;
         window.speechSynthesis.speak(utterance);
       };

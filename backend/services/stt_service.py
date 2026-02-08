@@ -1,11 +1,13 @@
 """
 本地語音轉文字服務 — 基於 faster-whisper (離線，無需外網)
 首次使用會自動下載 Whisper base 模型 (~150MB)
+轉寫結果統一轉換為繁體中文
 """
 import os
 import tempfile
 import logging
 import asyncio
+from services.chinese_converter import to_traditional
 
 logger = logging.getLogger("jingjin.stt")
 
@@ -74,10 +76,12 @@ def _transcribe_sync(audio_bytes: bytes, filename: str = "audio.webm") -> str:
             vad_filter=True,  # 過濾靜音段，提升速度
             vad_parameters=dict(min_silence_duration_ms=500),
         )
-        text = "".join(segment.text for segment in segments)
+        raw_text = "".join(segment.text for segment in segments).strip()
+        # Whisper 中文輸出預設為簡體，統一轉繁體
+        text = to_traditional(raw_text)
         duration = round(info.duration, 1)
-        logger.info(f"  轉寫完成: {duration}s 音頻 → {len(text)} 字")
-        return text.strip()
+        logger.info(f"  轉寫完成: {duration}s 音頻 → {len(text)} 字 (已轉繁體)")
+        return text
     finally:
         os.unlink(tmp_path)
 

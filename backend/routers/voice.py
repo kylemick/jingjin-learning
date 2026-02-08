@@ -28,7 +28,7 @@ async def voice_status():
         "tts_engine": "browser_speech_synthesis",
         "whisper_available": whisper_ok,
         "xunfei_configured": is_xunfei_configured(),
-        "lang": "zh-CN",
+        "lang": "zh-TW",
         "message": (
             "本地 Whisper 語音識別已就緒（離線可用）" if whisper_ok
             else "語音識別不可用，請安裝 faster-whisper"
@@ -178,7 +178,7 @@ async def tts_config():
     """TTS 配置 — 使用瀏覽器 SpeechSynthesis API"""
     return {
         "engine": "browser_speech_synthesis",
-        "lang": "zh-CN",
+        "lang": "zh-TW",
         "rate": 0.9,
         "pitch": 1.0,
         "volume": 1.0,
