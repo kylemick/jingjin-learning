@@ -82,6 +82,8 @@ export const agentApi = {
     request<any>(`/agent/${studentId}/conversations/${convId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   skipPhase: (studentId: number, convId: number) =>
     request<any>(`/agent/${studentId}/conversations/${convId}/skip-phase`, { method: 'POST' }),
+  deleteConversation: (studentId: number, convId: number) =>
+    request<any>(`/agent/${studentId}/conversations/${convId}`, { method: 'DELETE' }),
   exportUrl: (studentId: number, convId: number) =>
     `${BASE_URL}/agent/${studentId}/conversations/${convId}/export`,
 };

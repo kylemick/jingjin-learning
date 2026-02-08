@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Plus, History, Mic, MicOff, Loader2, SkipForward, Volume2, VolumeX, Download, Pencil, Check } from 'lucide-react';
+import { Send, Plus, History, Mic, MicOff, Loader2, SkipForward, Volume2, VolumeX, Download, Pencil, Check, Trash2 } from 'lucide-react';
 import PhaseProgress from '../components/PhaseProgress';
 import ChatBubble, { StreamingBubble } from '../components/ChatBubble';
 import { useAgentChat, ALL_PHASES } from '../hooks/useAgentChat';
@@ -26,6 +26,7 @@ export default function AgentChat() {
   const [editTitle, setEditTitle] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     messages,
@@ -114,10 +115,27 @@ export default function AgentChat() {
     window.open(`/api/agent/${studentId}/conversations/${convId}/export`, '_blank');
   };
 
+  const handleDelete = async (id: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!window.confirm('確定要刪除這個旅程嗎？所有對話記錄和關聯數據都將被清除，此操作不可撤銷。')) return;
+    try {
+      await fetch(`/api/agent/${studentId}/conversations/${id}`, { method: 'DELETE' });
+      setConvList(prev => prev.filter(c => c.id !== id));
+      if (convId === id) {
+        setConvId(null);
+        setConvTitle('');
+      }
+    } catch (err) {
+      console.error('刪除失敗:', err);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || !convId || isStreaming) return;
     const msg = input.trim();
     setInput('');
+    // 重置 textarea 高度
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     await sendMessage(studentId, convId, msg);
   };
 
@@ -202,6 +220,16 @@ export default function AgentChat() {
         <div className="flex items-center gap-2">
           {convId && (
             <button
+              onClick={() => handleDelete(convId)}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              title="刪除旅程"
+            >
+              <Trash2 size={14} />
+              刪除
+            </button>
+          )}
+          {convId && (
+            <button
               onClick={handleExport}
               className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
               title="導出旅程"
@@ -283,22 +311,30 @@ export default function AgentChat() {
                   {convList.slice(0, 5).map((c) => {
                     const phaseName = ALL_PHASES.find(p => p.key === c.current_phase)?.name || c.current_phase;
                     return (
-                      <button
-                        key={c.id}
-                        onClick={() => handleLoadConversation(c.id)}
-                        className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-lg border border-slate-200 hover:border-indigo-200 hover:shadow-sm transition-all text-left"
-                      >
-                        <div>
-                          <div className="text-sm font-medium text-slate-700">{c.title}</div>
-                          <div className="text-xs text-slate-400">當前：{phaseName}</div>
-                        </div>
-                        <span className={cn(
-                          'text-xs px-2 py-1 rounded-full',
-                          c.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'
-                        )}>
-                          {c.status === 'completed' ? '已完成' : '進行中'}
-                        </span>
-                      </button>
+                      <div key={c.id} className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleLoadConversation(c.id)}
+                          className="flex-1 flex items-center justify-between px-4 py-3 bg-white rounded-lg border border-slate-200 hover:border-indigo-200 hover:shadow-sm transition-all text-left"
+                        >
+                          <div>
+                            <div className="text-sm font-medium text-slate-700">{c.title}</div>
+                            <div className="text-xs text-slate-400">當前：{phaseName}</div>
+                          </div>
+                          <span className={cn(
+                            'text-xs px-2 py-1 rounded-full',
+                            c.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'
+                          )}>
+                            {c.status === 'completed' ? '已完成' : '進行中'}
+                          </span>
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(c.id, e)}
+                          className="p-2 text-slate-300 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                          title="刪除旅程"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -336,20 +372,28 @@ export default function AgentChat() {
             </button>
             <div className="space-y-2">
               {convList.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => handleLoadConversation(c.id)}
-                  className={cn(
-                    'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
-                    convId === c.id ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-50 text-slate-600'
-                  )}
-                >
-                  <div className="font-medium">{c.title}</div>
-                  <div className="text-xs text-slate-400 mt-0.5">
-                    {ALL_PHASES.find(p => p.key === c.current_phase)?.name}
-                    {c.status === 'completed' && ' · 已完成'}
-                  </div>
-                </button>
+                <div key={c.id} className="flex items-center gap-1 group">
+                  <button
+                    onClick={() => handleLoadConversation(c.id)}
+                    className={cn(
+                      'flex-1 text-left px-3 py-2 rounded-lg text-sm transition-colors',
+                      convId === c.id ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-50 text-slate-600'
+                    )}
+                  >
+                    <div className="font-medium">{c.title}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      {ALL_PHASES.find(p => p.key === c.current_phase)?.name}
+                      {c.status === 'completed' && ' · 已完成'}
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(c.id, e)}
+                    className="p-1.5 text-slate-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100"
+                    title="刪除"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -397,12 +441,22 @@ export default function AgentChat() {
           {/* Text input */}
           <div className="flex gap-2">
             <textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // 自動調整高度
+                const el = textareaRef.current;
+                if (el) {
+                  el.style.height = 'auto';
+                  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+                }
+              }}
               onKeyDown={handleKeyDown}
               placeholder="輸入你的想法..."
               rows={1}
-              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 overflow-y-auto"
+              style={{ maxHeight: '160px' }}
               disabled={isStreaming}
             />
             <button

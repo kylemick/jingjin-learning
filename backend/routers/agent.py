@@ -6,7 +6,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 
 from database.connection import get_db, async_session
@@ -78,6 +78,74 @@ async def update_conversation(
     await db.flush()
     await db.refresh(conv)
     return conv
+
+
+@router.delete("/{student_id}/conversations/{conv_id}")
+async def delete_conversation(
+    student_id: int,
+    conv_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """刪除精進旅程及其所有關聯數據"""
+    # 1. 查詢 conversation + messages
+    result = await db.execute(
+        select(Conversation)
+        .options(selectinload(Conversation.messages))
+        .where(Conversation.id == conv_id, Conversation.student_id == student_id)
+    )
+    conv = result.scalar_one_or_none()
+    if not conv:
+        raise HTTPException(status_code=404, detail="對話不存在")
+
+    # 2. 從 action_metadata 收集所有由 Agent ACTION 創建的關聯記錄 ID
+    entry_ids = []
+    goal_ids = []
+    plan_ids = []
+    record_ids = []
+
+    for msg in conv.messages:
+        meta = msg.action_metadata
+        if not meta or not isinstance(meta, dict):
+            continue
+        action = meta.get("action")
+        if not action or not isinstance(action, dict):
+            continue
+        if action.get("success"):
+            if "entry_id" in action:
+                entry_ids.append(action["entry_id"])
+            if "goal_id" in action:
+                goal_ids.append(action["goal_id"])
+            if "plan_id" in action:
+                plan_ids.append(action["plan_id"])
+            if "record_id" in action:
+                record_ids.append(action["record_id"])
+
+    # 3. 批量刪除關聯數據
+    deleted_counts = {}
+    if entry_ids:
+        r = await db.execute(delete(TimeEntry).where(TimeEntry.id.in_(entry_ids)))
+        deleted_counts["time_entries"] = r.rowcount
+    if goal_ids:
+        # 先刪除關聯的 action_plans（goal_id FK）
+        await db.execute(delete(ActionPlan).where(ActionPlan.goal_id.in_(goal_ids)))
+        r = await db.execute(delete(Goal).where(Goal.id.in_(goal_ids)))
+        deleted_counts["goals"] = r.rowcount
+    if plan_ids:
+        r = await db.execute(delete(ActionPlan).where(ActionPlan.id.in_(plan_ids)))
+        deleted_counts["action_plans"] = r.rowcount
+    if record_ids:
+        r = await db.execute(delete(LearningRecord).where(LearningRecord.id.in_(record_ids)))
+        deleted_counts["learning_records"] = r.rowcount
+
+    # 4. 刪除 conversation（chat_messages 由 cascade 自動刪除）
+    await db.delete(conv)
+    await db.flush()
+
+    logger.info(
+        f"刪除旅程: conv={conv_id}, student={student_id}, "
+        f"清理關聯數據: {deleted_counts}"
+    )
+    return {"ok": True, "deleted": deleted_counts}
 
 
 @router.get("/{student_id}/conversations/{conv_id}", response_model=ConversationDetailOut)

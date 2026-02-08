@@ -4,12 +4,12 @@ alwaysApply: true
 ---
 
 # 項目自動快照
-> 最後更新: 2026-02-08 20:50:05
+> 最後更新: 2026-02-08 20:58:59
 > 文件總數: 62
 
 ## 後端路由 (backend/routers/)
   - action_workshop.py (6 endpoints)
-  - agent.py (8 endpoints)
+  - agent.py (9 endpoints)
   - choice_navigator.py (4 endpoints)
   - learning_dojo.py (3 endpoints)
   - profile.py (8 endpoints)
@@ -22,7 +22,7 @@ alwaysApply: true
 
 ## 前端頁面 (frontend/src/pages/)
   - ActionWorkshop [hooks: useSSE,useState,useVoice,]
-  - AgentChat [hooks: useAgentChat,useEffect,useRef,useState,useVoice,]
+  - AgentChat [hooks: useAgentChat,useEffect,useEvent,useRef,useState,useVoice,]
   - ChoiceNavigator [hooks: useEffect,useSSE,useState,useVoice,]
   - Home [hooks: useEffect,useState,]
   - LearningDojo [hooks: useSSE,useState,useVoice,]
@@ -114,6 +114,7 @@ review_hubpost)
 review_hubget)
 agentpost)
 agentget)
+agentdelete)
 agentget)
 agentpost)
 agentpost)
