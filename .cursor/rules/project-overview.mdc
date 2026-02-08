@@ -1,0 +1,72 @@
+---
+description: 精進學習系統整體架構和開發約定 - 每次對話都會自動加載
+alwaysApply: true
+---
+
+# 精進學習系統 - 項目概覽
+
+## 項目定位
+基於采銅《精進：如何成為一個很厲害的人》七大維度，為中學生打造的 AI 驅動學習提升平台。
+前後端分離架構，DeepSeek API 提供 AI 反饋，訊飛 API 提供語音交互。
+
+## 技術棧
+- **後端**: Python 3.13 + FastAPI + SQLAlchemy(async) + MySQL + aiomysql
+- **前端**: React 18 + TypeScript + Vite + TailwindCSS (v4, @import 方式) + Recharts
+- **AI**: DeepSeek API (Chat Completion, SSE 流式)
+- **語音**: 訊飛 WebSocket STT + 瀏覽器 SpeechSynthesis TTS
+
+## 項目結構
+```
+improve/
+├── backend/                  # FastAPI 後端 (port 8000)
+│   ├── main.py               # 入口, CORS, 路由掛載, 日誌
+│   ├── config.py             # pydantic-settings 配置 (讀 .env)
+│   ├── schemas.py            # Pydantic 請求/響應模型
+│   ├── database/
+│   │   ├── connection.py     # async engine, session, init_db (不覆蓋)
+│   │   └── models.py         # 9 張 ORM 表
+│   ├── services/
+│   │   ├── ai_service.py     # DeepSeek 封裝 (stream + non-stream)
+│   │   ├── learning_engine.py # 業務邏輯 (檔案上下文, 推薦)
+│   │   └── voice_service.py  # 訊飛 WebSocket 工具函數
+│   ├── routers/              # 10 個路由模組 (共 48 routes)
+│   └── prompts/templates.py  # 7 大模組 Prompt + 3 場景修飾
+├── frontend/                 # React 前端 (port 5173)
+│   └── src/
+│       ├── components/       # Layout, StreamingText, VoiceButton, etc.
+│       ├── pages/            # 10 個頁面 (Home + 7模組 + Profile + QuestionBank)
+│       ├── hooks/            # useSSE, useVoice
+│       ├── services/api.ts   # 統一 API 封裝 + fetchSSE
+│       └── lib/utils.ts      # cn() tailwind merge
+├── start.sh                  # 一鍵啟動腳本
+└── scripts/                  # 工具腳本
+```
+
+## 核心設計模式
+
+### 精進閉環
+個人檔案 → Prompt 動態調整 → 練習/行動 → AI 評估 → 更新檔案 → ...
+
+### 七大模組 (對應書的七大維度)
+1. time_compass - 時間羅盤 (半衰期, 時間投入)
+2. choice_navigator - 選擇導航 (隱含假設, 第三選擇)
+3. action_workshop - 行動工坊 (圖層工作法, MVP, 練習提交)
+4. learning_dojo - 學習道場 (以問題為中心, 知識解碼, 知識融合)
+5. thinking_forge - 思維鍛造 (蘇格拉底問答, 斷捨離, 結構化思考)
+6. talent_growth - 才能精進 (長板識別, 必要難度挑戰)
+7. review_hub - 成長復盤 (三行而後思, AI 深度反饋, 檔案更新)
+
+### 三大場景
+- academic (學科), expression (表達), interview (面試)
+
+### AI 調用模式
+所有 AI 接口都走 SSE 流式: 後端 `StreamingResponse` → 前端 `useSSE` hook
+Prompt 自動組裝: 模組 prompt + 場景修飾 + 個人檔案上下文
+
+## 開發約定
+- 後端路由 URL 全部以 `/api/` 前綴
+- 前端 Vite proxy 把 `/api` 代理到後端 8000 端口
+- 數據庫初始化使用 `create_all(checkfirst=True)`, 絕不覆蓋已有數據
+- `.env` 管理所有密鑰, 禁止硬編碼
+- 使用繁體中文作為 UI 和 AI 回覆語言
+- 日誌統一輸出到 stdout, 帶 `[後端]`/`[前端]` 前綴

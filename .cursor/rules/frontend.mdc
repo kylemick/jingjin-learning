@@ -1,0 +1,53 @@
+---
+description: 前端開發規範 - 修改 frontend/ 下任何文件時自動加載
+globs: ["frontend/**/*.{ts,tsx,css}"]
+---
+
+# 前端開發規範
+
+## 頁面組件 (10 個)
+| 頁面 | 路由 | 功能 |
+|---|---|---|
+| `Home.tsx` | `/` | 儀表盤, 雷達圖, 學生選擇/建立, 模組卡片 |
+| `TimeCompass.tsx` | `/time-compass` | 時間記錄表單, AI 分析, 記錄列表 |
+| `ChoiceNavigator.tsx` | `/choice-navigator` | 目標設定, 隱含假設識別 |
+| `ActionWorkshop.tsx` | `/action-workshop` | 圖層分解, 練習提交 |
+| `LearningDojo.tsx` | `/learning-dojo` | 三 Tab: 問題中心/知識解碼/知識融合 |
+| `ThinkingForge.tsx` | `/thinking-forge` | 三 Tab: 蘇格拉底/簡化/結構化 |
+| `TalentGrowth.tsx` | `/talent-growth` | 能力柱狀圖, 優勢分析, 挑戰設計 |
+| `ReviewHub.tsx` | `/review-hub` | 深度反饋, 學習記錄, 反思, 檔案更新 |
+| `Profile.tsx` | `/profile` | 個人信息編輯, 興趣管理, 能力畫像, 反饋摘要 |
+| `QuestionBank.tsx` | `/question-bank` | 題庫 CRUD, 篩選, AI 生成 |
+
+## 共享組件
+- `Layout.tsx` - 左側欄導航 + 主內容區
+- `PageHeader.tsx` - 頁面標題 + 副標題 + 圖標 + 《精進》引言
+- `StreamingText.tsx` - AI 流式文本顯示 (帶閃爍光標)
+- `VoiceButton.tsx` - 語音輸入/朗讀/停止按鈕組
+- `ScenarioSelector.tsx` - 場景選擇器 (學科/表達/面試)
+
+## 自定義 Hooks
+- `useSSE(options?)` - SSE 流式接收: `{ text, isStreaming, startStream, reset }`
+- `useVoice(options?)` - 語音交互: `{ isListening, transcript, startListening, stopListening, speak, stopSpeaking }`
+
+## API 封裝 (`services/api.ts`)
+- `profileApi`, `questionApi`, `timeCompassApi`, `choiceNavApi`, `actionWorkshopApi`, `reviewHubApi`
+- `fetchSSE(url, options, onChunk, onDone)` - 通用 SSE 請求函數
+
+## 狀態管理
+- 使用 `localStorage.getItem('studentId')` 存儲當前選中的學生 ID
+- 各頁面使用 `useState` 本地管理, 無全局狀態庫
+
+## UI 風格
+- TailwindCSS v4 (通過 `@import "tailwindcss"` 引入)
+- 配色: indigo 主色, slate 文字, 各模組有獨立強調色
+- 圓角卡片 (`rounded-xl`), 邊框 (`border-slate-200`), 輕陰影 (`shadow-sm`)
+- 響應式: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+
+## 新增頁面的規範
+1. 在 `pages/` 新增 TSX 文件
+2. 在 `App.tsx` 添加 `<Route>`
+3. 在 `components/Layout.tsx` 的 `navItems` 添加導航項
+4. 使用 `PageHeader` + `ScenarioSelector` 保持 UI 一致性
+5. AI 交互使用 `useSSE` + `StreamingText` 統一模式
+6. 語音用 `useVoice` + `VoiceButton` 統一模式

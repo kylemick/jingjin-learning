@@ -1,0 +1,38 @@
+---
+description: AI Prompt 設計規範 - 修改 prompts 或 AI 相關代碼時加載
+globs: ["backend/prompts/**", "backend/services/ai_service.py"]
+---
+
+# AI Prompt 設計規範
+
+## Prompt 組裝流程
+```
+build_full_prompt(module, scenario, student_info)
+  → MODULE_PROMPTS[module]["system"]     # 模組角色 + 核心理念
+  + SCENARIO_PROMPTS[scenario]            # 場景修飾 (academic/expression/interview)
+  + build_student_context(student_info)   # 個人檔案動態注入
+```
+
+## 七大模組 Prompt 角色
+| 模組 | AI 角色 | 核心方法論 |
+|---|---|---|
+| time_compass | 時間管理教練 | 半衰期評估, 五年願景, 快慢切換 |
+| choice_navigator | 選擇引導師 | 終極問題, 隱含假設, 第三選擇, 不替學生做選擇 |
+| action_workshop | 行動教練 | 即刻行動, MVP, 圖層工作法, 三行而後思 |
+| learning_dojo | 學習導師 | 問題中心, 解碼知識, 技能終點, 知識融合 |
+| thinking_forge | 思維訓練師 | 斷捨離, 潛意識, 思維圖像化, 周密思考 |
+| talent_growth | 潛能教練 | 長板優勢, 必要難度, 興趣驅動而非意志力 |
+| review_hub | 復盤教練 | 三行而後思, 主動探索, 獨特性, 創造成功 |
+
+## 個人檔案上下文注入
+`build_student_context()` 從 student_info dict 提取:
+- 基礎信息 (姓名/年級/學校/目標/性格/學習風格)
+- 能力畫像 (學科9維 + 表達4維 + 面試4維, 各0-100)
+- 興趣圖譜 (前5個, 含深度)
+- 反饋摘要 (前3條, 含場景/優勢/短板/趨勢)
+
+## 修改 Prompt 的注意事項
+1. 保持「引導而非直接給答案」的教學風格
+2. 確保每個模組的 Prompt 包含書中對應章節的核心概念
+3. 使用繁體中文回覆
+4. 個人檔案數據會隨學習過程動態變化, Prompt 需適配

@@ -1,0 +1,55 @@
+---
+description: 後端開發規範 - 修改 backend/ 下任何文件時自動加載
+globs: ["backend/**/*.py"]
+---
+
+# 後端開發規範
+
+## 文件職責
+| 文件 | 職責 |
+|---|---|
+| `main.py` | FastAPI app 實例, lifespan, CORS, 路由掛載 |
+| `config.py` | `Settings(BaseSettings)`, 從 `.env` 讀取, `@lru_cache` |
+| `schemas.py` | 所有 Pydantic 模型 (Create/Update/Out) |
+| `database/connection.py` | async engine/session, `Base`, `get_db()`, `init_db()` |
+| `database/models.py` | 9 張 ORM 表, 枚舉類型 |
+| `services/ai_service.py` | `chat_completion()`, `chat_completion_stream()`, `get_ai_response()` |
+| `services/learning_engine.py` | `get_student_full()`, `student_to_context()`, `smart_recommend_questions()` |
+| `services/voice_service.py` | 訊飛認證 URL 生成, 幀數據構建, 響應解析 |
+| `prompts/templates.py` | `SYSTEM_BASE`, `MODULE_PROMPTS[7]`, `SCENARIO_PROMPTS[3]`, `build_full_prompt()` |
+
+## 數據庫模型 (9 表)
+- `students` → `ability_profiles` (1:1), `interest_items` (1:N)
+- `students` → `feedback_summaries` (1:N), `time_entries` (1:N)
+- `students` → `goals` (1:N), `action_plans` (1:N), `learning_records` (1:N)
+- `questions` (獨立題庫表)
+- 枚舉: `ScenarioType`, `DifficultyLevel`, `SubjectType`, `ModuleType`
+
+## 路由模組 (10 個)
+- `profile.py` - CRUD 學生/興趣/能力/反饋
+- `question_bank.py` - 題庫 CRUD + AI 生成
+- `time_compass.py` - 時間記錄 + AI 分析
+- `choice_navigator.py` - 目標 + 隱含假設 + 決策矩陣
+- `action_workshop.py` - 計劃 + 任務分解 + 提交練習 + 推薦題目
+- `learning_dojo.py` - 問題中心學習 + 知識解碼 + 知識融合
+- `thinking_forge.py` - 蘇格拉底問答 + 簡化 + 結構化思考
+- `talent_growth.py` - 優勢分析 + 挑戰設計 + 成長軌跡
+- `review_hub.py` - 記錄查詢 + 反思 + 深度反饋 + 檔案更新 + 儀表盤
+- `voice.py` - WebSocket STT 代理 + TTS 配置
+
+## AI 流式輸出模式 (所有 AI 路由統一)
+```python
+stream = await get_ai_response(module, scenario, ctx, message)
+async def event_generator():
+    async for chunk in stream:
+        yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+    yield "data: [DONE]\n\n"
+return StreamingResponse(event_generator(), media_type="text/event-stream")
+```
+
+## 新增路由/功能的規範
+1. 在 `routers/` 下新增文件, 遵循現有命名風格
+2. 在 `main.py` 中 import 並 `include_router`
+3. 若需新表, 在 `database/models.py` 新增, 在 `schemas.py` 新增對應模型
+4. AI 相關接口必須接受 `student_id`, 從中構建個人檔案上下文
+5. 使用 `get_student_full()` + `student_to_context()` 構建 AI prompt

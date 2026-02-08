@@ -1,0 +1,205 @@
+---
+description: 項目自動快照 (由 scripts/update-cursor-rules.sh 自動生成，勿手動編輯)
+alwaysApply: true
+---
+
+# 項目自動快照
+> 最後更新: 2026-02-08 17:59:47
+> 文件總數: 51
+
+## 後端路由 (backend/routers/)
+  - action_workshop.py (6 endpoints)
+  - choice_navigator.py (4 endpoints)
+  - learning_dojo.py (3 endpoints)
+  - profile.py (8 endpoints)
+  - question_bank.py (5 endpoints)
+  - review_hub.py (5 endpoints)
+  - talent_growth.py (3 endpoints)
+  - thinking_forge.py (3 endpoints)
+  - time_compass.py (4 endpoints)
+  - voice.py (2 endpoints)
+
+## 前端頁面 (frontend/src/pages/)
+  - ActionWorkshop [hooks: useSSE,useState,useVoice,]
+  - ChoiceNavigator [hooks: useEffect,useSSE,useState,useVoice,]
+  - Home [hooks: useEffect,useState,]
+  - LearningDojo [hooks: useSSE,useState,useVoice,]
+  - Profile [hooks: useEffect,useState,]
+  - QuestionBank [hooks: useEffect,useState,]
+  - ReviewHub [hooks: useEffect,useSSE,useState,useVoice,]
+  - TalentGrowth [hooks: useEffect,useSSE,useState,useVoice,]
+  - ThinkingForge [hooks: useSSE,useState,useVoice,]
+  - TimeCompass [hooks: useEffect,useSSE,useState,useVoice,]
+
+## 數據庫模型
+  - Student
+  - AbilityProfile
+  - InterestItem
+  - FeedbackSummary
+  - Question
+  - TimeEntry
+  - Goal
+  - ActionPlan
+  - LearningRecord
+
+## Pydantic Schemas
+  - StudentCreate
+  - StudentUpdate
+  - AbilityProfileOut
+  - InterestItemOut
+  - StudentOut
+  - InterestCreate
+  - QuestionCreate
+  - QuestionOut
+  - TimeEntryCreate
+  - TimeEntryOut
+  - GoalCreate
+  - GoalOut
+  - ActionPlanCreate
+  - ActionPlanOut
+  - LearningRecordCreate
+  - LearningRecordOut
+  - AIRequest
+  - ReflectionCreate
+  - FeedbackSummaryOut
+
+## API 端點清單
+```
+action_workshopget)
+action_workshoppost)
+action_workshoppost)
+action_workshopget)
+action_workshoppost)
+action_workshopput)
+time_compassget)
+time_compasspost)
+time_compassget)
+time_compasspost)
+profilepost)
+profileget)
+profileget)
+profileput)
+profilepost)
+profiledelete)
+profileget)
+profileget)
+thinking_forgepost)
+thinking_forgepost)
+thinking_forgepost)
+question_bankget)
+question_bankpost)
+question_bankpost)
+question_bankget)
+question_bankpost)
+voicewebsocket)
+voiceget)
+learning_dojopost)
+learning_dojopost)
+learning_dojopost)
+review_hubget)
+review_hubpost)
+review_hubpost)
+review_hubpost)
+review_hubget)
+talent_growthpost)
+talent_growthpost)
+talent_growthget)
+choice_navigatorget)
+choice_navigatorpost)
+choice_navigatorpost)
+choice_navigatorpost)
+```
+
+## 後端依賴
+```
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy[asyncio]>=2.0.0
+aiomysql>=0.2.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+httpx>=0.27.0
+websockets>=13.0
+python-multipart>=0.0.9
+```
+
+## 前端依賴
+```
+  clsx: ^2.1.1
+  lucide-react: ^0.563.0
+  react: ^19.2.0
+  react-dom: ^19.2.0
+  react-router-dom: ^7.13.0
+  recharts: ^3.7.0
+  tailwind-merge: ^3.4.0
+  @eslint/js: ^9.39.1
+  @tailwindcss/vite: ^4.1.18
+  @types/node: ^24.10.1
+  @types/react: ^19.2.5
+  @types/react-dom: ^19.2.3
+  @vitejs/plugin-react: ^5.1.1
+  eslint: ^9.39.1
+  eslint-plugin-react-hooks: ^7.0.1
+  eslint-plugin-react-refresh: ^0.4.24
+  globals: ^16.5.0
+  tailwindcss: ^4.1.18
+  typescript: ~5.9.3
+  typescript-eslint: ^8.46.4
+  vite: ^7.2.4
+```
+
+## 文件樹
+```
+./.cursor/rules/ai-prompts.mdc
+./.cursor/rules/auto-snapshot.mdc
+./.cursor/rules/backend.mdc
+./.cursor/rules/database.mdc
+./.cursor/rules/frontend.mdc
+./.cursor/rules/project-overview.mdc
+./backend/config.py
+./backend/database/__init__.py
+./backend/database/connection.py
+./backend/database/models.py
+./backend/main.py
+./backend/prompts/__init__.py
+./backend/prompts/templates.py
+./backend/routers/__init__.py
+./backend/routers/action_workshop.py
+./backend/routers/choice_navigator.py
+./backend/routers/learning_dojo.py
+./backend/routers/profile.py
+./backend/routers/question_bank.py
+./backend/routers/review_hub.py
+./backend/routers/talent_growth.py
+./backend/routers/thinking_forge.py
+./backend/routers/time_compass.py
+./backend/routers/voice.py
+./backend/schemas.py
+./backend/services/__init__.py
+./backend/services/ai_service.py
+./backend/services/learning_engine.py
+./backend/services/voice_service.py
+./frontend/src/App.tsx
+./frontend/src/components/Layout.tsx
+./frontend/src/components/PageHeader.tsx
+./frontend/src/components/ScenarioSelector.tsx
+./frontend/src/components/StreamingText.tsx
+./frontend/src/components/VoiceButton.tsx
+./frontend/src/hooks/useSSE.ts
+./frontend/src/hooks/useVoice.ts
+./frontend/src/lib/utils.ts
+./frontend/src/main.tsx
+./frontend/src/pages/ActionWorkshop.tsx
+./frontend/src/pages/ChoiceNavigator.tsx
+./frontend/src/pages/Home.tsx
+./frontend/src/pages/LearningDojo.tsx
+./frontend/src/pages/Profile.tsx
+./frontend/src/pages/QuestionBank.tsx
+./frontend/src/pages/ReviewHub.tsx
+./frontend/src/pages/TalentGrowth.tsx
+./frontend/src/pages/ThinkingForge.tsx
+./frontend/src/pages/TimeCompass.tsx
+./frontend/src/services/api.ts
+./frontend/vite.config.ts
+```
