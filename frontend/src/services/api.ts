@@ -78,8 +78,12 @@ export const agentApi = {
     request<any>(`/agent/${studentId}/conversations`, { method: 'POST', body: JSON.stringify(data) }),
   getConversation: (studentId: number, convId: number) =>
     request<any>(`/agent/${studentId}/conversations/${convId}`),
+  updateConversation: (studentId: number, convId: number, data: { title: string }) =>
+    request<any>(`/agent/${studentId}/conversations/${convId}`, { method: 'PATCH', body: JSON.stringify(data) }),
   skipPhase: (studentId: number, convId: number) =>
     request<any>(`/agent/${studentId}/conversations/${convId}/skip-phase`, { method: 'POST' }),
+  exportUrl: (studentId: number, convId: number) =>
+    `${BASE_URL}/agent/${studentId}/conversations/${convId}/export`,
 };
 
 // ===================== 成長復盤 =====================

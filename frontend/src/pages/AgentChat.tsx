@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Plus, History, Mic, MicOff, Loader2, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Send, Plus, History, Mic, MicOff, Loader2, SkipForward, Volume2, VolumeX, Download, Pencil, Check } from 'lucide-react';
 import PhaseProgress from '../components/PhaseProgress';
 import ChatBubble, { StreamingBubble } from '../components/ChatBubble';
 import { useAgentChat, ALL_PHASES } from '../hooks/useAgentChat';
@@ -17,11 +17,15 @@ interface ConvItem {
 export default function AgentChat() {
   const studentId = Number(localStorage.getItem('studentId') || '0');
   const [convId, setConvId] = useState<number | null>(null);
+  const [convTitle, setConvTitle] = useState('');
   const [convList, setConvList] = useState<ConvItem[]>([]);
   const [input, setInput] = useState('');
   const [showSidebar, setShowSidebar] = useState(false);
   const [scenario, setScenario] = useState('academic');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const {
     messages,
@@ -72,16 +76,42 @@ export default function AgentChat() {
     });
     const conv = await res.json();
     setConvId(conv.id);
+    setConvTitle(conv.title);
     await loadConversation(studentId, conv.id);
-    // Start: get AI's opening message
     await startConversation(studentId, conv.id);
     setShowSidebar(false);
   };
 
   const handleLoadConversation = async (id: number) => {
+    const item = convList.find(c => c.id === id);
     setConvId(id);
+    setConvTitle(item?.title || '');
     await loadConversation(studentId, id);
     setShowSidebar(false);
+  };
+
+  const handleRenameStart = () => {
+    setEditTitle(convTitle);
+    setIsEditingTitle(true);
+    setTimeout(() => titleInputRef.current?.focus(), 50);
+  };
+
+  const handleRenameSave = async () => {
+    const newTitle = editTitle.trim();
+    if (!newTitle || !convId) { setIsEditingTitle(false); return; }
+    await fetch(`/api/agent/${studentId}/conversations/${convId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTitle }),
+    });
+    setConvTitle(newTitle);
+    setConvList(prev => prev.map(c => c.id === convId ? { ...c, title: newTitle } : c));
+    setIsEditingTitle(false);
+  };
+
+  const handleExport = () => {
+    if (!convId) return;
+    window.open(`/api/agent/${studentId}/conversations/${convId}/export`, '_blank');
   };
 
   const handleSend = async () => {
@@ -138,9 +168,30 @@ export default function AgentChat() {
             <History size={18} />
           </button>
           <div>
-            <h2 className="text-sm font-semibold text-slate-700">
-              {convId ? `精進旅程 #${convId}` : '開始你的精進旅程'}
-            </h2>
+            {convId && isEditingTitle ? (
+              <div className="flex items-center gap-1">
+                <input
+                  ref={titleInputRef}
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleRenameSave(); if (e.key === 'Escape') setIsEditingTitle(false); }}
+                  onBlur={handleRenameSave}
+                  className="text-sm font-semibold text-slate-700 border-b border-indigo-400 outline-none bg-transparent px-0 py-0 w-48"
+                />
+                <button onClick={handleRenameSave} className="p-0.5 text-indigo-600 hover:text-indigo-800"><Check size={14} /></button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-sm font-semibold text-slate-700">
+                  {convId ? convTitle || `精進旅程 #${convId}` : '開始你的精進旅程'}
+                </h2>
+                {convId && (
+                  <button onClick={handleRenameStart} className="p-0.5 text-slate-400 hover:text-slate-600" title="重命名">
+                    <Pencil size={12} />
+                  </button>
+                )}
+              </div>
+            )}
             {currentPhaseInfo && convId && (
               <p className="text-xs text-slate-400">
                 {currentPhaseInfo.name} — {currentPhaseInfo.book_chapter}
@@ -149,6 +200,16 @@ export default function AgentChat() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {convId && (
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+              title="導出旅程"
+            >
+              <Download size={14} />
+              導出
+            </button>
+          )}
           {convId && convStatus === 'active' && (
             <button
               onClick={handleSkipPhase}

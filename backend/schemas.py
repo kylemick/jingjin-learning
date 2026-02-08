@@ -238,6 +238,9 @@ class ConversationCreate(BaseModel):
     title: Optional[str] = "新的精進旅程"
     scenario: str = "academic"
 
+class ConversationUpdate(BaseModel):
+    title: str
+
 class ChatMessageOut(BaseModel):
     id: int
     role: str
